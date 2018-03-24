@@ -76,9 +76,9 @@ class Server
         os.write(byteArray,0,byteArray.length);
         os.flush();
         System.out.println("File Transferred!!!!");
-        System.out.println("Type exit to continue");
-        String temp=sc.next();
         socket.close();
+	System.out.println("Type exit to continue");
+        String temp=sc.next();
     }
 }
 class Client

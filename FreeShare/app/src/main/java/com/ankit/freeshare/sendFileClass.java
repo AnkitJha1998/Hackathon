@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.PersistableBundle;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -21,37 +22,80 @@ import java.io.*;
 /**
  * Created by Ankit on 3/23/2018.
  */
-/*class ServerSend extends Activity
+
+class ServerThread extends Thread
 {
-    static void sendExtension(String s) throws IOException
+    File file;
+    String fileName;
+    TextView hostShow;
+    public ServerThread(File f,String s,TextView t)
+    {
+        file=f;fileName=s;hostShow=t;
+
+    }
+    static void sendExtension(String fileName) throws IOException
     {
         ServerSocket server=new ServerSocket(55286);
         Socket socket=server.accept();
         OutputStream os=socket.getOutputStream();
         BufferedWriter bw1=new BufferedWriter(new OutputStreamWriter(os));
-        bw1.write(s,0,s.length());
+        bw1.write(fileName,0,fileName.length());
         bw1.flush();
         socket.close();
         server.close();
-
     }
-    static void ServerBegin(File file,String fileNames) throws IOException
+    public String getHostNames()
     {
-        InetAddress addr=InetAddress.getLocalHost();
-        String hostName=addr.getHostName();
-        sendFileClass.setEditText(hostName);
-        sendExtension(fileNames);
-        ServerSocket serverSocket=new ServerSocket(55286);
+        try {
+            InetAddress in = InetAddress.getLocalHost();
+            String host=in.getAddress().toString();
+            Log.i("Hostname:","HostName");
+            return host;
 
+        }catch(UnknownHostException e)
+        {
+            Log.i("String::",e.toString());
+            //Toast.makeText(getApplicationContext(), e.toString(),Toast.LENGTH_SHORT).show();
+        }
+        return "";
     }
-}*/
+    public void start()
+    {
+
+        hostShow.append(getHostNames());
+        run();
+    }
+    @Override
+    public void run()
+    {   try{
+        Log.i("Inside Thread","You are building server");
+        sendExtension(fileName);
+        ServerSocket server=new ServerSocket(55286);
+        Socket socket=server.accept();
+        OutputStream os=socket.getOutputStream();
+        byte []byteArray = new byte[(int)file.length()];
+        FileInputStream fin = new FileInputStream(file);
+        BufferedInputStream bin = new BufferedInputStream(fin);
+        bin.read(byteArray,0,byteArray.length);
+        os.write(byteArray,0,byteArray.length);
+        os.flush();
+        bin.close();
+        socket.close();
+    }
+        catch(IOException e)
+        {
+            System.out.println(e);
+        }
+    }
+}
+
 public class sendFileClass extends Activity {
 
     File file;
     String fileNames;
     boolean proceed=false;
 
-    static void sendExtension(String hostName,String FileNames) throws IOException
+    /*static void sendExtension(String hostName,String FileNames) throws IOException
     {
         ServerSocket server=new ServerSocket(55286);
         Socket socket=server.accept();
@@ -61,7 +105,7 @@ public class sendFileClass extends Activity {
         bw1.flush();
         socket.close();
         server.close();
-    }
+    }*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,12 +120,23 @@ public class sendFileClass extends Activity {
     }
     public void selection(View view)
     {
-        EditText fileName=(EditText)findViewById(R.id.fileName);
-        file=new File(Environment.getExternalStorageDirectory(),fileName.toString());
-
-        fileNames=fileName.toString();
-        Toast.makeText(getApplicationContext(),file.getName(),Toast.LENGTH_SHORT).show();
+        EditText ed=(EditText)findViewById(R.id.fileName);
+        file=new File((Environment.getExternalStorageDirectory())+ed.getText().toString());
+        Toast.makeText(getApplicationContext(),file.getName().toString(),Toast.LENGTH_SHORT).show();
         proceed=true;
+    }
+    public String getHostNames()
+    {
+        try {
+            InetAddress in = InetAddress.getLocalHost();
+            String host=in.getHostName();
+            return host;
+
+        }catch(UnknownHostException e)
+        {
+            Toast.makeText(getApplicationContext(), e.toString(),Toast.LENGTH_SHORT).show();
+        }
+        return "";
     }
     public void sendData(View view)
     {
@@ -93,32 +148,22 @@ public class sendFileClass extends Activity {
         else
         {
             try {
-                InetAddress addr = InetAddress.getLocalHost();
-                String HostName=addr.getHostName();
-                TextView hostShow=(TextView)findViewById(R.id.HostShow);
-                hostShow.append(HostName);
-                TextView portShow = (TextView)findViewById(R.id.portShow);
+                TextView hostView =(TextView)findViewById(R.id.HostShow);
+                TextView portShow = (TextView) findViewById(R.id.portShow);
+                Thread myThread=new Thread(new ServerThread(file,fileNames,hostView));
+
                 portShow.append("55286");
-                sendExtension(HostName,fileNames);
-                ServerSocket server=new ServerSocket(55286);
-                Socket socket=server.accept();
-                OutputStream os=socket.getOutputStream();
-                byte []byteArray = new byte[(int)file.length()];
-                FileInputStream fin = new FileInputStream(file);
-                BufferedInputStream bin = new BufferedInputStream(fin);
-                bin.read(byteArray,0,byteArray.length);
-                os.write(byteArray,0,byteArray.length);
-                os.flush();
-                Toast.makeText(getApplicationContext(),"File Transferred",Toast.LENGTH_SHORT).show();
-                hostShow.setText("Host Name to connect to : ");
-                portShow.setText("Port: ");
-                file=null;
-                fileNames="";
-                proceed=false;
+                myThread.start();
+                Toast.makeText(getApplicationContext(), "File Transferred", Toast.LENGTH_SHORT).show();
+                //hostView.setText("Host Name to connect to : ");
+                //portShow.setText("Port: ");
+                //file = null;
+                //fileNames = "";
+                //proceed = false;
             }
             catch(Exception e)
             {
-                Toast.makeText(this, "Error Occured:"+e, Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(),"Error:"+e,Toast.LENGTH_SHORT).show();
             }
 
 
