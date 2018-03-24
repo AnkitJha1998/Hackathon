@@ -1,0 +1,49 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package clientmessage;
+
+/**
+ *
+ * @author Ankit
+ */
+import java.util.Scanner;
+import java.net.*;
+import java.io.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+public class ClientMessage{
+    public static void main(String[] args) throws IOException{
+        int filesize=1022386;
+        int bytesRead;
+        int currentTot=0;
+        /*String host;
+        Socket socket=new Socket("192.168.43.74",10000);
+        OutputStream os=socket.getOutputStream();
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
+        bw.write("file.fil");
+        System.out.println("Message Sent");
+        System.out.println("Ending server");*/
+        String host;Scanner s=new Scanner(System.in);
+        System.out.print("Enter host name:");
+        host=s.next();
+        Socket socket=new Socket(host,55286);
+        byte [] bytearray = new byte[filesize];
+        InputStream is=socket.getInputStream();
+        FileOutputStream fos = new FileOutputStream("C:\\Users\\Ankit\\Desktop\\JavaFiles\\receive.txt");
+        BufferedOutputStream bos =new BufferedOutputStream(fos);
+        bytesRead = is.read(bytearray,0,bytearray.length);
+        currentTot=bytesRead;
+        do{
+            bytesRead=is.read(bytearray,currentTot,(bytearray.length-currentTot));
+            if(bytesRead>=0)currentTot+=bytesRead;    
+        } while(bytesRead>-1);
+        bos.write(bytearray,0,currentTot);
+        bos.flush();
+        bos.close();
+        socket.close();
+    }
+    
+}
